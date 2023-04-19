@@ -37,6 +37,11 @@ INSTALLED_APPS = [
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
+    'draft',
+    'league',
+    'player',
+    'rotowire',
+    'stats',
 ]
 
 MIDDLEWARE = [
@@ -75,8 +80,11 @@ WSGI_APPLICATION = 'nabl.wsgi.application'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.sqlite3',
-        'NAME': BASE_DIR / 'db.sqlite3',
+        'ENGINE': 'django.db.backends.postgresql',
+        'OPTIONS': {
+            'service': 'nabl',
+            'passfile': '/home/wahoo/.pgpass',
+        }
     }
 }
 
