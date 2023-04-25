@@ -1,2 +1,6 @@
 django==4.2
 psycopg==3.1.8
+pybaseball
+python-decouple
+tabulate
+unidecode

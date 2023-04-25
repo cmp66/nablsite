@@ -31,6 +31,8 @@ class Players(models.Model):
     startyear = models.IntegerField()
     endyear = models.IntegerField()
     bbreflink = models.CharField(max_length=128)
+    bbrefid = models.CharField(max_length=16, blank=True, null=True)
+    fangraphsid = models.CharField(max_length=16, blank=True, null=True)
     rotowireid = models.CharField(max_length=16, blank=True, null=True)
     position = models.CharField(max_length=8)
     bats = models.CharField(max_length=8, blank=True, null=True)
@@ -42,14 +44,17 @@ class Players(models.Model):
         verbose_name = 'Player'
         verbose_name_plural = 'Players'
         ordering = ['lastname', 'firstname']
+        constraints = [
+            models.UniqueConstraint(fields=['bbrefid'], name='unique_bbrefid'),
+        ]
 
     def __str__(self):
         return f'{self.displayname}'
         
 class PlayersAdmin(admin.ModelAdmin):
-    fields = ['firstname', 'lastname', 'displayname', 'startyear', 'endyear', 'bbreflink', 'position']
-    list_display = ('id', 'firstname', 'lastname', 'displayname', 'startyear', 'endyear', 'bbreflink', 'position')
-    search_fields = ['firstname', 'lastname', 'displayname', 'position', 'bbreflink']
+    fields = ['firstname', 'lastname', 'displayname', 'startyear', 'endyear', 'bbrefid', 'fangraphsid', 'position']
+    list_display = ('id', 'firstname', 'lastname', 'displayname', 'startyear', 'endyear', 'bbrefid', 'fangraphsid', 'position')
+    search_fields = ['firstname', 'lastname', 'displayname', 'position', 'bbrefid', 'fangraphsid']
 
 # class Assignments(models.Model):
 #     id = models.AutoField(primary_key=True)
@@ -64,12 +69,11 @@ class CardedPlayers(models.Model):
     id = models.AutoField(primary_key=True)
     playername = models.CharField(max_length=64)
     season = models.IntegerField()
-    playerid = models.ForeignKey(Players, models.CASCADE, db_column='playerid', blank=True, null=True)
+    playerid = models.ForeignKey(Players, on_delete=models.CASCADE, db_column='playerid', blank=True, null=True)
     mlbteam = models.CharField(max_length=64, blank=True, null=True)
 
     class Meta:
         db_table = 'cardedplayers'
-        unique_together = (('playerid', 'season'),)
         verbose_name = 'Carded Player'
         verbose_name_plural = 'Carded Players'
 
@@ -77,9 +81,9 @@ class CardedPlayers(models.Model):
             return f'{self.playername}'
         
 class CardedPlayersAdmin(admin.ModelAdmin):
-    fields = ['playername', 'season', 'mlbteam']
-    list_display = ('id', 'playername', 'season', 'mlbteam')
-    search_fields = ['season', 'playername', 'mlbteam']
+    fields = ['playername', 'season', 'mlbteam', 'playerid']
+    list_display = ('id', 'playername', 'season', 'mlbteam', 'playerid')
+    search_fields = ['season', 'playername', 'mlbteam', 'playerid__displayname']
 
 
 class Playercuts(models.Model):
@@ -137,12 +141,4 @@ class Rosters(models.Model):
 
     class Meta:
         db_table = 'rosters'
-
-
-class Rosterslot(models.Model):
-    rosterid = models.ForeignKey(Teams, models.CASCADE, db_column='rosterid')
-    playerid = models.ForeignKey(Players, models.CASCADE, db_column='playerid')
-
-    class Meta:
-        db_table = 'rosterslot'
 
