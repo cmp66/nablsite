@@ -1,6 +1,6 @@
 from django.contrib import admin
 from .models import Members, Teams, Leagues, Divisions
-from .models import  MembersAdmin, TeamsAdmin, LeaguesAdmin, DivisionsAdmin
+from .models import MembersAdmin, TeamsAdmin, LeaguesAdmin, DivisionsAdmin
 from .models import Schedules, SchedulesAdmin
 from .models import Idgen, IdgenAdmin
 

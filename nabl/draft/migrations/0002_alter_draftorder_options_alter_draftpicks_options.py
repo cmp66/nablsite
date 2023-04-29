@@ -4,18 +4,20 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('draft', '0001_initial'),
+        ("draft", "0001_initial"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='draftorder',
+            name="draftorder",
             options={},
         ),
         migrations.AlterModelOptions(
-            name='draftpicks',
-            options={'verbose_name': 'Draft Pick', 'verbose_name_plural': 'Draft Picks'},
+            name="draftpicks",
+            options={
+                "verbose_name": "Draft Pick",
+                "verbose_name_plural": "Draft Picks",
+            },
         ),
     ]

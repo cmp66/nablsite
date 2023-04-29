@@ -4,14 +4,15 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('player', '0005_players_fangraphsid'),
+        ("player", "0005_players_fangraphsid"),
     ]
 
     operations = [
         migrations.AddConstraint(
-            model_name='players',
-            constraint=models.UniqueConstraint(fields=('bbrefid',), name='unique_bbrefid'),
+            model_name="players",
+            constraint=models.UniqueConstraint(
+                fields=("bbrefid",), name="unique_bbrefid"
+            ),
         ),
     ]

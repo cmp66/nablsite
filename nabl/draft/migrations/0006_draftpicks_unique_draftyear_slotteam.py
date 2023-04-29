@@ -4,14 +4,16 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('draft', '0005_draftpicks_draftpicks_draftyear_idx'),
+        ("draft", "0005_draftpicks_draftpicks_draftyear_idx"),
     ]
 
     operations = [
         migrations.AddConstraint(
-            model_name='draftpicks',
-            constraint=models.UniqueConstraint(fields=('draftyear', 'slotteam', 'round'), name='unique_draftyear_slotteam'),
+            model_name="draftpicks",
+            constraint=models.UniqueConstraint(
+                fields=("draftyear", "slotteam", "round"),
+                name="unique_draftyear_slotteam",
+            ),
         ),
     ]

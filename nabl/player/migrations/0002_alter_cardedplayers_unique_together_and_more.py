@@ -5,19 +5,24 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('player', '0001_initial'),
+        ("player", "0001_initial"),
     ]
 
     operations = [
         migrations.AlterUniqueTogether(
-            name='cardedplayers',
+            name="cardedplayers",
             unique_together=set(),
         ),
         migrations.AlterField(
-            model_name='cardedplayers',
-            name='playerid',
-            field=models.ForeignKey(blank=True, db_column='playerid', null=True, on_delete=django.db.models.deletion.CASCADE, to='player.players'),
+            model_name="cardedplayers",
+            name="playerid",
+            field=models.ForeignKey(
+                blank=True,
+                db_column="playerid",
+                null=True,
+                on_delete=django.db.models.deletion.CASCADE,
+                to="player.players",
+            ),
         ),
     ]

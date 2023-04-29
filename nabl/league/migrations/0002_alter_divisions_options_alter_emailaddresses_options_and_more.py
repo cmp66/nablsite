@@ -4,42 +4,51 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('league', '0001_initial'),
+        ("league", "0001_initial"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='divisions',
-            options={'verbose_name': 'Division', 'verbose_name_plural': 'Divisions'},
+            name="divisions",
+            options={"verbose_name": "Division", "verbose_name_plural": "Divisions"},
         ),
         migrations.AlterModelOptions(
-            name='emailaddresses',
-            options={'verbose_name': 'Email Address', 'verbose_name_plural': 'Email Addresses'},
+            name="emailaddresses",
+            options={
+                "verbose_name": "Email Address",
+                "verbose_name_plural": "Email Addresses",
+            },
         ),
         migrations.AlterModelOptions(
-            name='idgen',
+            name="idgen",
             options={},
         ),
         migrations.AlterModelOptions(
-            name='leagues',
-            options={'verbose_name': 'League', 'verbose_name_plural': 'Leagues'},
+            name="leagues",
+            options={"verbose_name": "League", "verbose_name_plural": "Leagues"},
         ),
         migrations.AlterModelOptions(
-            name='members',
-            options={'verbose_name': 'Member', 'verbose_name_plural': 'Members'},
+            name="members",
+            options={"verbose_name": "Member", "verbose_name_plural": "Members"},
         ),
         migrations.AlterModelOptions(
-            name='phonenumbers',
-            options={'verbose_name': 'Phone Number', 'verbose_name_plural': 'Phone Numbers'},
+            name="phonenumbers",
+            options={
+                "verbose_name": "Phone Number",
+                "verbose_name_plural": "Phone Numbers",
+            },
         ),
         migrations.AlterModelOptions(
-            name='schedules',
-            options={'verbose_name': 'Schedule', 'verbose_name_plural': 'Schedules'},
+            name="schedules",
+            options={"verbose_name": "Schedule", "verbose_name_plural": "Schedules"},
         ),
         migrations.AlterModelOptions(
-            name='teams',
-            options={'ordering': ['city', 'nickname'], 'verbose_name': 'Team', 'verbose_name_plural': 'Teams'},
+            name="teams",
+            options={
+                "ordering": ["city", "nickname"],
+                "verbose_name": "Team",
+                "verbose_name_plural": "Teams",
+            },
         ),
     ]

@@ -5,40 +5,74 @@ import django.db.models.deletion
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('league', '0002_alter_divisions_options_alter_emailaddresses_options_and_more'),
+        (
+            "league",
+            "0002_alter_divisions_options_alter_emailaddresses_options_and_more",
+        ),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='divisions',
-            name='leagueid',
-            field=models.ForeignKey(db_column='leagueid', default=0, on_delete=django.db.models.deletion.CASCADE, to='league.leagues'),
+            model_name="divisions",
+            name="leagueid",
+            field=models.ForeignKey(
+                db_column="leagueid",
+                default=0,
+                on_delete=django.db.models.deletion.CASCADE,
+                to="league.leagues",
+            ),
         ),
         migrations.AddField(
-            model_name='emailaddresses',
-            name='memberid',
-            field=models.ForeignKey(db_column='memberid', default=0, on_delete=django.db.models.deletion.CASCADE, to='league.members'),
+            model_name="emailaddresses",
+            name="memberid",
+            field=models.ForeignKey(
+                db_column="memberid",
+                default=0,
+                on_delete=django.db.models.deletion.CASCADE,
+                to="league.members",
+            ),
         ),
         migrations.AddField(
-            model_name='phonenumbers',
-            name='memberid',
-            field=models.ForeignKey(db_column='memberid', default=0, on_delete=django.db.models.deletion.CASCADE, to='league.members'),
+            model_name="phonenumbers",
+            name="memberid",
+            field=models.ForeignKey(
+                db_column="memberid",
+                default=0,
+                on_delete=django.db.models.deletion.CASCADE,
+                to="league.members",
+            ),
         ),
         migrations.AddField(
-            model_name='schedules',
-            name='hometeam',
-            field=models.ForeignKey(db_column='hometeam', default=0, on_delete=django.db.models.deletion.CASCADE, related_name='schedules_hometeam_set', to='league.teams'),
+            model_name="schedules",
+            name="hometeam",
+            field=models.ForeignKey(
+                db_column="hometeam",
+                default=0,
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="schedules_hometeam_set",
+                to="league.teams",
+            ),
         ),
         migrations.AddField(
-            model_name='schedules',
-            name='visitteam',
-            field=models.ForeignKey(db_column='visitteam', default=0, on_delete=django.db.models.deletion.CASCADE, related_name='schedules_visitteam_set', to='league.teams'),
+            model_name="schedules",
+            name="visitteam",
+            field=models.ForeignKey(
+                db_column="visitteam",
+                default=0,
+                on_delete=django.db.models.deletion.CASCADE,
+                related_name="schedules_visitteam_set",
+                to="league.teams",
+            ),
         ),
         migrations.AddField(
-            model_name='teams',
-            name='memberid',
-            field=models.ForeignKey(db_column='memberid', default=0, on_delete=django.db.models.deletion.CASCADE, to='league.members'),
+            model_name="teams",
+            name="memberid",
+            field=models.ForeignKey(
+                db_column="memberid",
+                default=0,
+                on_delete=django.db.models.deletion.CASCADE,
+                to="league.members",
+            ),
         ),
     ]

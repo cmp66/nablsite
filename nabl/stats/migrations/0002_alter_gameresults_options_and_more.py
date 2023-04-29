@@ -4,30 +4,29 @@ from django.db import migrations
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('stats', '0001_initial'),
+        ("stats", "0001_initial"),
     ]
 
     operations = [
         migrations.AlterModelOptions(
-            name='gameresults',
+            name="gameresults",
             options={},
         ),
         migrations.AlterModelOptions(
-            name='nabladminstatrecords',
+            name="nabladminstatrecords",
             options={},
         ),
         migrations.AlterModelOptions(
-            name='seriesstatrecords',
+            name="seriesstatrecords",
             options={},
         ),
         migrations.AlterModelOptions(
-            name='statrecords',
+            name="statrecords",
             options={},
         ),
         migrations.AlterModelOptions(
-            name='teamresults',
-            options={'verbose_name_plural': 'Team Results'},
+            name="teamresults",
+            options={"verbose_name_plural": "Team Results"},
         ),
     ]

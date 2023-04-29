@@ -4,18 +4,17 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('player', '0006_players_unique_bbrefid'),
+        ("player", "0006_players_unique_bbrefid"),
     ]
 
     operations = [
         migrations.AddIndex(
-            model_name='transactions',
-            index=models.Index(fields=['id', 'type'], name='transactions_id_type_idx'),
+            model_name="transactions",
+            index=models.Index(fields=["id", "type"], name="transactions_id_type_idx"),
         ),
         migrations.AddIndex(
-            model_name='transactions',
-            index=models.Index(fields=['team1'], name='transactions_team1_idx'),
+            model_name="transactions",
+            index=models.Index(fields=["team1"], name="transactions_team1_idx"),
         ),
     ]

@@ -4,15 +4,14 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('player', '0004_players_bbrefid'),
+        ("player", "0004_players_bbrefid"),
     ]
 
     operations = [
         migrations.AddField(
-            model_name='players',
-            name='fangraphsid',
+            model_name="players",
+            name="fangraphsid",
             field=models.CharField(blank=True, max_length=16, null=True),
         ),
     ]

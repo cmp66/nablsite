@@ -4,14 +4,16 @@ from django.db import migrations, models
 
 
 class Migration(migrations.Migration):
-
     dependencies = [
-        ('league', '0004_emailaddresses_unique_primaryaddress_and_more'),
+        ("league", "0004_emailaddresses_unique_primaryaddress_and_more"),
     ]
 
     operations = [
         migrations.AddConstraint(
-            model_name='schedules',
-            constraint=models.UniqueConstraint(fields=('year', 'hometeam', 'visitteam', 'playmonth', 'monthidx'), name='unique_schedule'),
+            model_name="schedules",
+            constraint=models.UniqueConstraint(
+                fields=("year", "hometeam", "visitteam", "playmonth", "monthidx"),
+                name="unique_schedule",
+            ),
         ),
     ]
