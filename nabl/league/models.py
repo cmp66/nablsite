@@ -6,8 +6,12 @@ class Idgen(models.Model):
     nextval = models.IntegerField()
 
     class Meta:
-        managed = False
         db_table = 'idgen'
+
+class IdgenAdmin(admin.ModelAdmin):
+    fields = ['nextval']
+    list_display = ('nextval',)
+    exclude = ['id']
 
 
 class Leagues(models.Model):
@@ -15,7 +19,6 @@ class Leagues(models.Model):
     name = models.CharField(max_length=255)
 
     class Meta:
-        managed = False
         db_table = 'leagues'
         verbose_name = 'League'
         verbose_name_plural = 'Leagues'
@@ -31,10 +34,9 @@ class LeaguesAdmin(admin.ModelAdmin):
 class Divisions(models.Model):
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=255)
-    leagueid = models.ForeignKey(Leagues, on_delete=models.CASCADE, db_column='leagueid', blank=False, null=False)
+    leagueid = models.ForeignKey(Leagues, on_delete=models.CASCADE, db_column='leagueid', default=0)
 
     class Meta:
-        managed = False
         db_table = 'divisions'
         verbose_name = 'Division'
         verbose_name_plural = 'Divisions'
@@ -58,7 +60,6 @@ class Members(models.Model):
     zipcode = models.CharField(max_length=255)
 
     class Meta:
-        managed = False
         db_table = 'members'
         verbose_name = 'Member'
         verbose_name_plural = 'Members'
@@ -68,17 +69,17 @@ class Members(models.Model):
     
 class Phonenumbers(models.Model):
     id = models.AutoField(primary_key=True)
-    memberid = models.ForeignKey(Members, on_delete=models.CASCADE, db_column='memberid', blank=False, null=False)
+    memberid = models.ForeignKey(Members, on_delete=models.CASCADE, db_column='memberid', default=0)
     phonenumber = models.CharField(max_length=25)
     workorhome = models.CharField(max_length=2)
 
     class Meta:
-        managed = False
         db_table = 'phonenumbers'
         verbose_name = 'Phone Number'
         verbose_name_plural = 'Phone Numbers'
-        unique_together = (('memberid', 'phonenumber'),)
-
+        constraints = [
+            models.UniqueConstraint(fields=['memberid', 'phonenumber'], name='unique_phonenumber'),
+        ]
     def __str__(self):
         return f'{self.phonenumber}'
     
@@ -88,16 +89,17 @@ class PhonenumbersInline(admin.TabularInline):
 
 class Emailaddresses(models.Model):
     id = models.AutoField(primary_key=True)
-    memberid = models.ForeignKey(Members, on_delete=models.CASCADE, db_column='memberid', blank=False, null=False)
+    memberid = models.ForeignKey(Members, on_delete=models.CASCADE, db_column='memberid', default=0)
     address = models.CharField(max_length=64)
     primaryaddress = models.CharField(max_length=2)
 
     class Meta:
-        managed = False
         db_table = 'emailaddresses'
-        unique_together = (('memberid', 'primaryaddress'),)
         verbose_name = 'Email Address'
         verbose_name_plural = 'Email Addresses'
+        constraints = [
+            models.UniqueConstraint(fields=['memberid', 'primaryaddress'], name='unique_primaryaddress'),
+        ]
 
     def __str__(self):
         return f'{self.address}'
@@ -124,15 +126,15 @@ class Teams(models.Model):
     id = models.IntegerField(primary_key=True)
     city = models.CharField(max_length=255)
     nickname = models.CharField(max_length=255)
-    memberid = models.ForeignKey(Members, on_delete=models.CASCADE, blank=False, null=False, db_column='memberid')
+    memberid = models.ForeignKey(Members, on_delete=models.CASCADE, blank=False, null=False, db_column='memberid', default=0)
     predecessor = models.IntegerField(blank=True, null=True)
 
     class Meta:
-        managed = False
         ordering = ['city', 'nickname']
         db_table = 'teams'
         verbose_name = 'Team'
         verbose_name_plural = 'Teams'
+
 
     def __str__(self):
         return f'{self.city} {self.nickname}'
@@ -162,8 +164,8 @@ class TeamsAdmin(admin.ModelAdmin):
 
 class Schedules(models.Model):
     year = models.IntegerField()
-    hometeam = models.ForeignKey(Teams, on_delete=models.CASCADE, db_column='hometeam', related_name='schedules_hometeam_set')
-    visitteam = models.ForeignKey(Teams, on_delete=models.CASCADE, db_column='visitteam', related_name='schedules_visitteam_set')
+    hometeam = models.ForeignKey(Teams, on_delete=models.CASCADE, db_column='hometeam', related_name='schedules_hometeam_set', default=0)
+    visitteam = models.ForeignKey(Teams, on_delete=models.CASCADE, db_column='visitteam', related_name='schedules_visitteam_set', default=0)
     seriesid = models.AutoField(primary_key=True)
     homewins = models.IntegerField(default='0')
     visitwins = models.IntegerField(default='0')
@@ -173,11 +175,15 @@ class Schedules(models.Model):
     monthidx = models.IntegerField(choices=MONTHIDX_CHOICES, blank=False, null=False)
 
     class Meta:
-        managed = False
         db_table = 'schedules'
-        unique_together = (('year', 'hometeam', 'visitteam', 'playmonth', 'monthidx'),)
         verbose_name='Schedule'
         verbose_name_plural='Schedules'
+        constraints = [
+            models.UniqueConstraint(fields=['year', 'hometeam', 'visitteam', 'playmonth', 'monthidx'], name='unique_schedule'),
+        ]
+
+    def __str__(self):
+        return f'{self.visitteam} @ {self.hometeam} {self.playmonth} {self.monthidx}'
 
 class SchedulesAdmin(admin.ModelAdmin):
     fields = ['year', 'hometeam', 'visitteam', 'playmonth', 'monthidx', 'numgames', 'homewins', 'visitwins',]
@@ -186,7 +192,6 @@ class SchedulesAdmin(admin.ModelAdmin):
     search_fields = ['hometeam__nickname', 'visitteam__nickname', 'playmonth']
 
     class Meta:
-        managed = False
         db_table = 'schedules'
 
 

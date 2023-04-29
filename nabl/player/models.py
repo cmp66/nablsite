@@ -14,14 +14,20 @@ class Transactions(models.Model):
         db_table = 'transactions'
         verbose_name_plural = 'Transactions'
         verbose_name = 'Transaction'
+        indexes = [
+            models.Index(fields=['id', 'type'], name='transactions_id_type_idx'),
+            models.Index(fields=['team1'], name='transactions_team1_idx'),
+        ]
+
 
     def __str__(self):
         return str(self.id)
     
 class TransactionsAdmin(admin.ModelAdmin):
-    fields = ['type', 'transdate', 'team1', 'team2']
+    fields = ['type', 'transdate', 'team1', 'team2', 'id']
     list_display = ('type', 'transdate', 'team1', 'team2')
     search_fields = ['type', 'team1']
+    list_filter = ('type',)
 
 class Players(models.Model):
     id = models.AutoField(primary_key=True)
@@ -106,6 +112,9 @@ class Rosterassign(models.Model):
         unique_together = (('playerid', 'teamid', 'year'),)
         verbose_name = 'Roster Assignment'
         verbose_name_plural = 'Roster Assignments'
+
+    def __str__(self):
+        return f'{self.playerid} - {self.teamid} - {self.year}'
 
 class RosterassignAdmin(admin.ModelAdmin):
     fields = ['playerid', 'teamid', 'year']

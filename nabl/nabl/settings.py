@@ -81,7 +81,7 @@ DATABASES = {
     'default': {
         'ENGINE': 'django.db.backends.postgresql',
         'OPTIONS': {
-            'service': 'nabl',
+            'service': 'nablprod',
             'passfile': '/home/wahoo/.pgpass',
         }
     }
