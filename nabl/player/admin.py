@@ -8,4 +8,3 @@ admin.site.register(Players, PlayersAdmin)
 admin.site.register(Rosterassign, RosterassignAdmin)
 admin.site.register(Rostermove, RostermoveAdmin)
 admin.site.register(CardedPlayers, CardedPlayersAdmin)
-
