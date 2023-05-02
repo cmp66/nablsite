@@ -9,11 +9,12 @@ import django
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "nabl.settings")
 django.setup()
 
-
+from django.db.models import Count, Sum
 from pybaseball import playerid_lookup, batting_stats
 from pybaseball import lahman
 
 from player.models import Players
+from stats.models import Statrecords
 
 player_shorthands = ["jr.", "sr.", "ii", "iii", "iv", "Jr.", "Sr.", "II", "III", "IV"]
 
@@ -144,28 +145,196 @@ class PlayerManager:
                     break
         return result
 
-    def search_for_player_by_fullname(self, fullname, target_year=2000):
-        # first search for the player in our database
-        players = (
-            Players.objects.filter(displayname=fullname)
-            .filter(start_year__lte=target_year)
-            .filter(end_year__gte=target_year)
+    def process_batting_statsrecords(self, stat_records):
+        batting_records = []
+
+        for record in stat_records:
+
+            if (record["bat_ab"] + record["bat_walks"] + record["bat_hbp"]) == 0:
+                continue
+
+            record["AVG"] = (
+                f'{(record["bat_hits"] / record["bat_ab"]):.3f}'
+                if record["bat_ab"] > 0
+                else "0.000"
+            )
+            record[
+                "OBP"
+            ] = f'{((record["bat_hits"] + record["bat_walks"] + record["bat_hbp"]) / (record["bat_ab"] + record["bat_walks"] + record["bat_hbp"])):.3f}'
+            record["SLUG"] = (
+                f'{(record["bat_hits"] + record["bat_doubles"] + (record["bat_triples"] * 2) + (record["bat_hr"] * 3)) / record["bat_ab"]:.3f}'
+                if record["bat_ab"] > 0
+                else "0.000"
+            )
+
+            batting_records.append(record)
+
+        return batting_records
+    
+    def process_pitching_statsrecords(self, stat_records):
+        pitching_records = []
+
+        for record in stat_records:
+            if record["pitch_ipfull"]  == 0:
+                continue
+
+            record["ERA"] = (
+                f'{( (record["pitch_er"]*9) / record["pitch_ipfull"]):.2f}'
+                if record["pitch_ipfull"] > 0
+                else "0.00"
+            )
+ 
+            pitching_records.append(record)
+
+        return pitching_records
+
+    def get_all_batting_seasons(self, max_season=9999):
+        stat_records = (
+            Statrecords.objects.all()
+            .filter(season__lte=max_season)
+            .order_by("playerid__lastname", "playerid__firstname", "season")
+            .select_related("players")
+            .select_related("teams")
+            .values(
+                "playerid__lastname",
+                "playerid__firstname",
+                "season",
+                "teamid__city",
+                "games",
+                "bat_ab",
+                "bat_hits",
+                "bat_rbi",
+                "bat_runs",
+                "bat_doubles",
+                "bat_triples",
+                "bat_hr",
+                "bat_walks",
+                "bat_strikeouts",
+                "bat_sb",
+                "bat_cs",
+                "errors",
+                "bat_hbp",
+            )
         )
 
-        if players.count() > 0:
-            return players[0]
+        return self.process_batting_statsrecords(stat_records)
 
-        player_data = self.check_for_player(player, player.lastname)
-
-        if not player_data:
-            player_data = self.check_for_player(
-                player, player.displayname.split(maxsplit=3)[-1]
+    def get_all_batting_careers(self, max_season=9999):
+        stat_records = (
+            Players.objects.filter(statrecords__games__gt=0)
+            .filter(statrecords__season__lte=max_season)
+            .annotate(
+                games=Sum("statrecords__games", distinct=True),
+                bat_ab=Sum("statrecords__bat_ab", distinct=True),
+                bat_hits=Sum("statrecords__bat_hits", distinct=True),
+                bat_rbi=Sum("statrecords__bat_rbi", distinct=True),
+                bat_runs=Sum("statrecords__bat_runs",  distinct=True),
+                bat_doubles=Sum("statrecords__bat_doubles", distinct=True),
+                bat_triples=Sum("statrecords__bat_triples", distinct=True),
+                bat_hr=Sum("statrecords__bat_hr", distinct=True),
+                bat_walks=Sum("statrecords__bat_walks", distinct=True),
+                bat_strikeouts=Sum("statrecords__bat_strikeouts", distinct=True),
+                bat_sb=Sum("statrecords__bat_sb", distinct=True),
+                bat_cs=Sum("statrecords__bat_cs", distinct=True),
+                errors=Sum("statrecords__errors", distinct=True),
+                bat_hbp=Sum("statrecords__bat_hbp", distinct=True),
             )
-
-        if not player_data:
-            player_data = self.check_for_player(
-                player,
-                f"{player.displayname.split(maxsplit=2)[-2]} {player.displayname.split(maxsplit=2)[-1]}",
+            .values(
+                "lastname",
+                "firstname",
+                "games",
+                "bat_ab",
+                "bat_hits",
+                "bat_rbi",
+                "bat_runs",
+                "bat_doubles",
+                "bat_triples",
+                "bat_hr",
+                "bat_walks",
+                "bat_strikeouts",
+                "bat_sb",
+                "bat_cs",
+                "errors",
+                "bat_hbp",
             )
+            .order_by("lastname", "firstname")
+        )
 
-        return player_data
+        return self.process_batting_statsrecords(stat_records)
+    
+    def get_all_pitching_seasons(self, max_season=9999):
+        stat_records = (
+            Statrecords.objects.all()
+            .filter(season__lte=max_season)
+            .order_by("playerid__lastname", "playerid__firstname", "season")
+            .select_related("players")
+            .select_related("teams")
+            .values(
+                "playerid__lastname",
+                "playerid__firstname",
+                "season",
+                "teamid__city",
+                "pitch_gp",
+                "pitch_gs",
+                "pitch_cg",
+                "pitch_sho",
+                "pitch_wins",
+                "pitch_loss",
+                "pitch_save",
+                "pitch_ipfull",
+                "pitch_ipfract",
+                "pitch_hits",
+                "pitch_runs",
+                "pitch_er",
+                "pitch_hr",
+                "pitch_walks",
+                "pitch_strikeouts", 
+            )
+        )
+
+        return self.process_pitching_statsrecords(stat_records)
+    
+    def get_all_pitching_careers(self, max_season=9999):
+        stat_records = (
+            Players.objects.filter(statrecords__pitch_gp__gt=0)
+            .filter(statrecords__season__lte=max_season)
+            .annotate(
+                pitch_gp=Sum("statrecords__pitch_gp", distinct=True),
+                pitch_gs=Sum("statrecords__pitch_gs",distinct=True ),
+                pitch_cg=Sum("statrecords__pitch_cg", distinct=True),
+                pitch_sho=Sum("statrecords__pitch_sho", distinct=True),
+                pitch_wins=Sum("statrecords__pitch_wins", distinct=True),
+                pitch_loss=Sum("statrecords__pitch_loss", distinct=True),
+                pitch_save=Sum("statrecords__pitch_save", distinct=True),
+                pitch_ipfull=Sum("statrecords__pitch_ipfull", distinct=True),
+                pitch_ipfract=Sum("statrecords__pitch_ipfract", distinct=True),
+                pitch_hits=Sum("statrecords__pitch_hits", distinct=True),
+                pitch_runs=Sum("statrecords__pitch_runs", distinct=True),
+                pitch_er=Sum("statrecords__pitch_er", distinct=True),
+                pitch_hr=Sum("statrecords__pitch_hr", distinct=True),
+                pitch_walks=Sum("statrecords__pitch_walks", distinct=True),
+                pitch_strikeouts=Sum("statrecords__pitch_strikeouts", distinct=True),
+            )
+            .values(
+                "lastname",
+                "firstname",
+                "pitch_gp",
+                "pitch_gs",
+                "pitch_cg",
+                "pitch_sho",
+                "pitch_wins",
+                "pitch_loss",
+                "pitch_save",
+                "pitch_ipfull",
+                "pitch_ipfract",
+                "pitch_hits",
+                "pitch_runs",
+                "pitch_er",
+                "pitch_hr",
+                "pitch_walks",
+                "pitch_strikeouts", 
+            )
+            .order_by("lastname", "firstname")
+        )
+
+        return self.process_pitching_statsrecords(stat_records)

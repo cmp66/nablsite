@@ -102,7 +102,7 @@ def validatePlayersInFile(xl_file, rosterYear, cardedYear, minYear):
                 try:
                     assignment = getRosterAssignment(player, rosterYear)
                     if assignment.teamid.id != teams[team].id:
-                        logging.info(
+                        logging.error(
                             f"{firstname} {lastname} assigned to {team} in file but on site is {assignment.teamid.city}"
                         )
                 except ObjectDoesNotExist:
@@ -117,7 +117,7 @@ def validatePlayersInFile(xl_file, rosterYear, cardedYear, minYear):
             else:
                 try:
                     assignment = getRosterAssignment(player, rosterYear)
-                    logging.info(
+                    logging.error(
                         f"{firstname} {lastname} not assigned in file is assigned on site to {assignment.teamid.city}"
                     )
                 except ObjectDoesNotExist:
