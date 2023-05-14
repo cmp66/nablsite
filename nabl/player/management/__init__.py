@@ -223,7 +223,7 @@ class PlayerManager:
         with connection.cursor() as cursor:
             cursor.execute(
                 """
-                SELECT 
+                SELECT
                     players.lastname as playerid__lastname,
                     players.firstname as playerid__firstname,
                     statrecords.games,
@@ -260,7 +260,7 @@ class PlayerManager:
                         SUM(bat_hbp) AS bat_hbp
                     FROM
                         statrecords
-                    WHERE 
+                    WHERE
                         season <= %s
                     GROUP BY
                         statrecords.playerid) statrecords
@@ -336,7 +336,7 @@ class PlayerManager:
         with connection.cursor() as cursor:
             cursor.execute(
                 """
-                SELECT 
+                SELECT
                     players.lastname as playerid__lastname,
                     players.firstname as playerid__firstname,
                     statrecords.stat_pitch_gp,
@@ -375,7 +375,7 @@ class PlayerManager:
                         SUM(pitch_strikeouts) AS stat_pitch_strikeouts
                     FROM
                         statrecords
-                    WHERE 
+                    WHERE
                         pitch_gp > 0 AND season <= %s
                     GROUP BY
                         statrecords.playerid) statrecords

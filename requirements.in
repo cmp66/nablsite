@@ -1,6 +1,7 @@
 black
 django
 kolo
+pre-commit
 psycopg
 pybaseball
 python-decouple
