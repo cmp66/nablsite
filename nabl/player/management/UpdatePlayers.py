@@ -1,4 +1,3 @@
-import pprint
 from player.management import PlayerManager
 from player.models import Players
 
@@ -42,7 +41,7 @@ for player in players:
         )
 
     if not player_data:
-        pprint(
+        print(
             f"No player found for {player.firstname} {player.lastname} {player.bbreflink}"
         )
     else:

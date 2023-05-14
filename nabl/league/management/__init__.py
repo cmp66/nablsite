@@ -5,9 +5,9 @@ import django
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "nabl.settings")
 django.setup()
 
-from stats.models import Teamresults
-from player.models import Rosterassign
-from league.models import Schedules
+from stats.models import Teamresults  # noqa: E402
+from player.models import Rosterassign  # noqa: E402
+from league.models import Schedules  # noqa: E402
 
 
 class LeagueManager:

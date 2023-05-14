@@ -1,6 +1,7 @@
 from math import floor, isnan
 from unidecode import unidecode
-
+from pybaseball import playerid_lookup
+from pybaseball import lahman
 import logging
 import os
 import string
@@ -9,13 +10,10 @@ import django
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "nabl.settings")
 django.setup()
 
-from django.db.models import Sum, F
-from django.db import connection
-from pybaseball import playerid_lookup
-from pybaseball import lahman
-
-from player.models import Players
-from stats.models import Statrecords
+from django.db.models import F  # noqa: E402
+from django.db import connection  # noqa: E402
+from player.models import Players  # noqa: E402
+from stats.models import Statrecords  # noqa: E402
 
 player_shorthands = ["jr.", "sr.", "ii", "iii", "iv", "Jr.", "Sr.", "II", "III", "IV"]
 
@@ -64,7 +62,6 @@ class PlayerManager:
                     "key_mlbam": row["key_mlbam"],
                     "key_bbref": row["key_bbref"],
                     "key_lahman": row["key_bbref"],
-                    "key_fangraphs": row["key_fangraphs"],
                     "name_first": row["name_first"],
                     "name_last": row["name_last"],
                     "mlb_played_first": floor(float(row["mlb_played_first"])),
@@ -142,7 +139,6 @@ class PlayerManager:
                     )
 
                     # pprint (f'Found player {result["first_name"]} {result["last_name"]} {result["position"]}...')
-                    player_found = True
                     break
         return result
 
@@ -389,5 +385,3 @@ class PlayerManager:
             stat_records = self.dictfetchall(cursor)
 
         return self.process_pitching_statsrecords(stat_records)
-
-    # raw = 'SELECT "players"."lastname", "players"."firstname", SUM("statrecords"."pitch_gp") AS "stat_pitch_gp", SUM("statrecords"."pitch_gs") AS "stat_pitch_gs", SUM("statrecords"."pitch_cg") AS "stat_pitch_cg", SUM("statrecords"."pitch_sho") AS "stat_pitch_sho", SUM("statrecords"."pitch_wins") AS "stat_pitch_wins", SUM("statrecords"."pitch_loss") AS "stat_pitch_loss", SUM("statrecords"."pitch_save") AS "stat_pitch_save", SUM("statrecords"."pitch_ipfull") AS "stat_pitch_ipfull", SUM("statrecords"."pitch_ipfract") AS "stat_pitch_ipfract", SUM("statrecords"."pitch_hits") AS "stat_pitch_hits", SUM("statrecords"."pitch_runs") AS "stat_pitch_runs", SUM("statrecords"."pitch_er") AS "stat_pitch_er", SUM("statrecords"."pitch_hr") AS "stat_pitch_hr", SUM("statrecords"."pitch_walks") AS "stat_pitch_walks", SUM("statrecords"."pitch_strikeouts") AS "stat_pitch_strikeouts" FROM "statrecords" INNER JOIN "players" ON ("statrecords"."playerid" = "players"."id") WHERE ("statrecords"."pitch_gp" > 0 AND "statrecords"."season" <= 2022) GROUP BY "statrecords"."id", "players"."lastname", "players"."firstname" ORDER BY "players"."lastname" ASC, "players"."firstname" ASC'

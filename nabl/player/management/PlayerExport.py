@@ -154,7 +154,6 @@ def export_batting_seasons(directory, max_season):
     with open(file, "w") as csvfile:
         batting_records = manager.get_all_batting_seasons(max_season=max_season)
         logging.info(f"writing {len(batting_records)} batting season records to {file}")
-        fieldnames = batting_records[0].keys()
         writer = csv.writer(csvfile)
         writer.writerow(batter_new_season_cols)
         for record in batting_records:
@@ -166,7 +165,6 @@ def export_batting_careers(directory, max_season):
     with open(file, "w") as csvfile:
         batting_records = manager.get_all_batting_careers(max_season=max_season)
         logging.info(f"writing {len(batting_records)} batting career records to {file}")
-        fieldnames = batting_records[0].keys()
         writer = csv.writer(csvfile)
         writer.writerow(batter_new_career_cols)
         for record in batting_records:
@@ -180,7 +178,6 @@ def export_pitching_seasons(directory, max_season):
         logging.info(
             f"writing {len(pitching_records)} pitching season records to {file}"
         )
-        fieldnames = pitching_records[0].keys()
         writer = csv.writer(csvfile)
         writer.writerow(pitcher_new_season_cols)
         for record in pitching_records:
@@ -194,7 +191,6 @@ def export_pitching_careers(directory, max_season):
         logging.info(
             f"writing {len(pitching_records)} pitching career records to {file}"
         )
-        fieldnames = pitching_records[0].keys()
         writer = csv.writer(csvfile)
         writer.writerow(pitcher_new_career_cols)
         for record in pitching_records:
@@ -202,8 +198,6 @@ def export_pitching_careers(directory, max_season):
 
 
 def main():
-    manager = PlayerManager()
-
     logging.basicConfig(level=logging.INFO)
 
     parser = argparse.ArgumentParser(

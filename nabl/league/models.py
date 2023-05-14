@@ -37,7 +37,7 @@ class Divisions(models.Model):
     id = models.AutoField(primary_key=True)
     name = models.CharField(max_length=255)
     leagueid = models.ForeignKey(
-        Leagues, on_delete=models.CASCADE, db_column="leagueid", default=0
+        Leagues, on_delete=models.CASCADE, db_column="leagueid"
     )
 
     class Meta:
@@ -76,7 +76,9 @@ class Members(models.Model):
 class Phonenumbers(models.Model):
     id = models.AutoField(primary_key=True)
     memberid = models.ForeignKey(
-        Members, on_delete=models.CASCADE, db_column="memberid", default=0
+        Members,
+        on_delete=models.CASCADE,
+        db_column="memberid",
     )
     phonenumber = models.CharField(max_length=25)
     workorhome = models.CharField(max_length=2)
@@ -103,7 +105,7 @@ class PhonenumbersInline(admin.TabularInline):
 class Emailaddresses(models.Model):
     id = models.AutoField(primary_key=True)
     memberid = models.ForeignKey(
-        Members, on_delete=models.CASCADE, db_column="memberid", default=0
+        Members, on_delete=models.CASCADE, db_column="memberid"
     )
     address = models.CharField(max_length=64)
     primaryaddress = models.CharField(max_length=2)
@@ -141,20 +143,6 @@ class MembersAdmin(admin.ModelAdmin):
     search_fields = ["lastname"]
 
 
-class MembersAdmin(admin.ModelAdmin):
-    inlines = [PhonenumbersInline, EmailaddressesInline]
-    fields = ["firstname", "lastname", "streetaddress1", "city", "state", "zipcode"]
-    list_display = (
-        "firstname",
-        "lastname",
-        "streetaddress1",
-        "city",
-        "state",
-        "zipcode",
-    )
-    search_fields = ["lastname"]
-
-
 class Teams(models.Model):
     id = models.IntegerField(primary_key=True)
     city = models.CharField(max_length=255)
@@ -165,7 +153,6 @@ class Teams(models.Model):
         blank=False,
         null=False,
         db_column="memberid",
-        default=0,
     )
     predecessor = models.IntegerField(blank=True, null=True)
 
@@ -192,9 +179,9 @@ MONTH_CHOICES = (
 )
 
 MONTHIDX_CHOICES = (
-    (1, 1),
-    (2, 2),
-    (3, 3),
+    (1, "1"),
+    (2, "2"),
+    (3, "3"),
 )
 
 
@@ -211,19 +198,17 @@ class Schedules(models.Model):
         on_delete=models.CASCADE,
         db_column="hometeam",
         related_name="schedules_hometeam_set",
-        default=0,
     )
     visitteam = models.ForeignKey(
         Teams,
         on_delete=models.CASCADE,
         db_column="visitteam",
         related_name="schedules_visitteam_set",
-        default=0,
     )
     seriesid = models.AutoField(primary_key=True)
-    homewins = models.IntegerField(default="0")
-    visitwins = models.IntegerField(default="0")
-    numgames = models.IntegerField(default="3")
+    homewins = models.IntegerField(default=0)
+    visitwins = models.IntegerField(default=0)
+    numgames = models.IntegerField(default=3)
     dateplayed = models.DateTimeField(blank=True, null=True)
     playmonth = models.IntegerField(choices=MONTH_CHOICES, blank=False, null=False)
     monthidx = models.IntegerField(choices=MONTHIDX_CHOICES, blank=False, null=False)

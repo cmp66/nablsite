@@ -1,5 +1,6 @@
 black
 django
+flake8
 kolo
 pre-commit
 psycopg
