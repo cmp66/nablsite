@@ -1,7 +1,7 @@
 import argparse
 import csv
 import logging
-import sys
+import pprint
 from tabulate import tabulate
 from player.management import PlayerManager
 from player.models import Players, CardedPlayers
@@ -136,7 +136,7 @@ def main():
                                 f'Player {plan["displayname"]} already exists'
                             )
 
-    print(tabulate(plans, headers="keys", tablefmt="psql"))
+    pprint(tabulate(plans, headers="keys", tablefmt="psql"))
 
 
 if __name__ == "__main__":

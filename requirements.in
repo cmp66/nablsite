@@ -1,0 +1,9 @@
+black
+django
+kolo
+psycopg
+pybaseball
+python-decouple
+tabulate
+unidecode
+xlrd
