@@ -4,8 +4,7 @@ import django
 
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "nabl.settings")
 django.setup()
-
-from draft.models import Draftpicks
+from draft.models import Draftpicks  # noqa: E402
 
 
 class DraftManager:

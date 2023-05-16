@@ -1,14 +1,12 @@
 import xlrd
 import logging
 import argparse
-from player.management import PlayerManager
 from league.models import Teams
 from player.models import Players
 from player.models import Rosterassign
 from player.models import CardedPlayers
 
 from django.core.exceptions import ObjectDoesNotExist, MultipleObjectsReturned
-import os
 
 
 def getTeamByCity(cityName):
@@ -47,7 +45,7 @@ def getTeamList(xl_file):
 
         # logging.info(f"getting team {teamname}")
 
-        if teamname and not "zz" in teamname:
+        if teamname and "zz" not in teamname.lower():
             try:
                 nablTeam = getTeamByCity(teamname)
                 if nablTeam:
@@ -102,7 +100,7 @@ def validatePlayersInFile(xl_file, rosterYear, cardedYear, minYear):
                 try:
                     assignment = getRosterAssignment(player, rosterYear)
                     if assignment.teamid.id != teams[team].id:
-                        logging.info(
+                        logging.error(
                             f"{firstname} {lastname} assigned to {team} in file but on site is {assignment.teamid.city}"
                         )
                 except ObjectDoesNotExist:
@@ -117,7 +115,7 @@ def validatePlayersInFile(xl_file, rosterYear, cardedYear, minYear):
             else:
                 try:
                     assignment = getRosterAssignment(player, rosterYear)
-                    logging.info(
+                    logging.error(
                         f"{firstname} {lastname} not assigned in file is assigned on site to {assignment.teamid.city}"
                     )
                 except ObjectDoesNotExist:
@@ -146,8 +144,6 @@ def validatePlayersInFile(xl_file, rosterYear, cardedYear, minYear):
 
 
 def main():
-    manager = PlayerManager()
-
     logging.basicConfig(level=logging.ERROR)
 
     parser = argparse.ArgumentParser(

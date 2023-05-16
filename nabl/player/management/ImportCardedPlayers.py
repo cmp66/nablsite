@@ -1,7 +1,6 @@
 import argparse
 import csv
 import logging
-import sys
 from tabulate import tabulate
 from player.management import PlayerManager
 from player.models import Players, CardedPlayers
@@ -26,7 +25,6 @@ def check_for_displayname(display_name, season):
 def check_if_exists(plan):
     player = Players.objects.filter(bbrefid=plan["key_bbref"])
     if player.count() == 1:
-        new
         return True
 
     return False
@@ -93,7 +91,7 @@ def main():
 
     carded_filename = args.filename
     carded_season = int(args.season)
-    debug = args.debug
+    # debug = args.debug
     action = args.action
 
     logging.basicConfig(level=logging.INFO)

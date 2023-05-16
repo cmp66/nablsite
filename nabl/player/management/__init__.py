@@ -1,6 +1,7 @@
 from math import floor, isnan
 from unidecode import unidecode
-
+from pybaseball import playerid_lookup
+from pybaseball import lahman
 import logging
 import os
 import string
@@ -9,11 +10,10 @@ import django
 os.environ.setdefault("DJANGO_SETTINGS_MODULE", "nabl.settings")
 django.setup()
 
-
-from pybaseball import playerid_lookup, batting_stats
-from pybaseball import lahman
-
-from player.models import Players
+from django.db.models import F  # noqa: E402
+from django.db import connection  # noqa: E402
+from player.models import Players  # noqa: E402
+from stats.models import Statrecords  # noqa: E402
 
 player_shorthands = ["jr.", "sr.", "ii", "iii", "iv", "Jr.", "Sr.", "II", "III", "IV"]
 
@@ -62,7 +62,6 @@ class PlayerManager:
                     "key_mlbam": row["key_mlbam"],
                     "key_bbref": row["key_bbref"],
                     "key_lahman": row["key_bbref"],
-                    "key_fangraphs": row["key_fangraphs"],
                     "name_first": row["name_first"],
                     "name_last": row["name_last"],
                     "mlb_played_first": floor(float(row["mlb_played_first"])),
@@ -139,33 +138,250 @@ class PlayerManager:
                         possible_player["key_lahman"]
                     )
 
-                    # print (f'Found player {result["first_name"]} {result["last_name"]} {result["position"]}...')
-                    player_found = True
+                    # pprint (f'Found player {result["first_name"]} {result["last_name"]} {result["position"]}...')
                     break
         return result
 
-    def search_for_player_by_fullname(self, fullname, target_year=2000):
-        # first search for the player in our database
-        players = (
-            Players.objects.filter(displayname=fullname)
-            .filter(start_year__lte=target_year)
-            .filter(end_year__gte=target_year)
+    def process_batting_statsrecords(self, stat_records):
+        batting_records = []
+
+        for record in stat_records:
+            if (record["bat_ab"] + record["bat_walks"] + record["bat_hbp"]) == 0:
+                continue
+
+            record["AVG"] = (
+                f'{(record["bat_hits"] / record["bat_ab"]):.3f}'
+                if record["bat_ab"] > 0
+                else "0.000"
+            )
+            record[
+                "OBP"
+            ] = f'{((record["bat_hits"] + record["bat_walks"] + record["bat_hbp"]) / (record["bat_ab"] + record["bat_walks"] + record["bat_hbp"])):.3f}'
+            record["SLUG"] = (
+                f'{(record["bat_hits"] + record["bat_doubles"] + (record["bat_triples"] * 2) + (record["bat_hr"] * 3)) / record["bat_ab"]:.3f}'
+                if record["bat_ab"] > 0
+                else "0.000"
+            )
+
+            batting_records.append(record)
+
+        return batting_records
+
+    def process_pitching_statsrecords(self, stat_records):
+        pitching_records = []
+
+        for record in stat_records:
+            if record["stat_pitch_ipfull"] == 0:
+                continue
+
+            record["ERA"] = (
+                f'{( (record["stat_pitch_er"]*9) / record["stat_pitch_ipfull"]):.2f}'
+                if record["stat_pitch_ipfull"] > 0
+                else "0.00"
+            )
+
+            pitching_records.append(record)
+
+        return pitching_records
+
+    def get_all_batting_seasons(self, max_season=9999):
+        stat_records = (
+            Statrecords.objects.all()
+            .filter(season__lte=max_season)
+            .order_by("playerid__lastname", "playerid__firstname", "season")
+            .select_related("players")
+            .select_related("teams")
+            .values(
+                "playerid__lastname",
+                "playerid__firstname",
+                "season",
+                "teamid__city",
+                "games",
+                "bat_ab",
+                "bat_hits",
+                "bat_rbi",
+                "bat_runs",
+                "bat_doubles",
+                "bat_triples",
+                "bat_hr",
+                "bat_walks",
+                "bat_strikeouts",
+                "bat_sb",
+                "bat_cs",
+                "errors",
+                "bat_hbp",
+            )
         )
 
-        if players.count() > 0:
-            return players[0]
+        return self.process_batting_statsrecords(stat_records)
 
-        player_data = self.check_for_player(player, player.lastname)
-
-        if not player_data:
-            player_data = self.check_for_player(
-                player, player.displayname.split(maxsplit=3)[-1]
+    def get_all_batting_careers(self, max_season=9999):
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT
+                    players.lastname as playerid__lastname,
+                    players.firstname as playerid__firstname,
+                    statrecords.games,
+                    statrecords.bat_ab,
+                    statrecords.bat_hits,
+                    statrecords.bat_rbi,
+                    statrecords.bat_runs,
+                    statrecords.bat_doubles,
+                    statrecords.bat_triples,
+                    statrecords.bat_hr,
+                    statrecords.bat_walks,
+                    statrecords.bat_strikeouts,
+                    statrecords.bat_sb,
+                    statrecords.bat_cs,
+                    statrecords.errors,
+                    statrecords.bat_hbp
+                FROM players
+                INNER JOIN (
+                    SELECT
+                        playerid,
+                        SUM(games) AS games,
+                        SUM(bat_ab) AS bat_ab,
+                        SUM(bat_hits) AS bat_hits,
+                        SUM(bat_rbi) AS bat_rbi,
+                        SUM(bat_runs) AS bat_runs,
+                        SUM(bat_doubles) AS bat_doubles,
+                        SUM(bat_triples) AS bat_triples,
+                        SUM(bat_hr) AS bat_hr,
+                        SUM(bat_walks) AS bat_walks,
+                        SUM(bat_strikeouts) AS bat_strikeouts,
+                        SUM(bat_sb) AS bat_sb,
+                        SUM(bat_cs) AS bat_cs,
+                        SUM(errors) AS errors,
+                        SUM(bat_hbp) AS bat_hbp
+                    FROM
+                        statrecords
+                    WHERE
+                        season <= %s
+                    GROUP BY
+                        statrecords.playerid) statrecords
+                ON statrecords.playerid = players.id
+                ORDER BY
+                    players.lastname, players.firstname
+                """,
+                [max_season],
             )
 
-        if not player_data:
-            player_data = self.check_for_player(
-                player,
-                f"{player.displayname.split(maxsplit=2)[-2]} {player.displayname.split(maxsplit=2)[-1]}",
+            stat_records = self.dictfetchall(cursor)
+
+        return self.process_batting_statsrecords(stat_records)
+
+    def get_all_pitching_seasons(self, max_season=9999):
+        stat_records = (
+            Statrecords.objects.all()
+            .filter(season__lte=max_season)
+            .order_by("playerid__lastname", "playerid__firstname", "season")
+            .select_related("players")
+            .select_related("teams")
+            .annotate(
+                stat_pitch_gp=F("pitch_gp"),
+                stat_pitch_gs=F("pitch_gs"),
+                stat_pitch_cg=F("pitch_cg"),
+                stat_pitch_sho=F("pitch_sho"),
+                stat_pitch_wins=F("pitch_wins"),
+                stat_pitch_loss=F("pitch_loss"),
+                stat_pitch_save=F("pitch_save"),
+                stat_pitch_ipfull=F("pitch_ipfull"),
+                stat_pitch_ipfract=F("pitch_ipfract"),
+                stat_pitch_hits=F("pitch_hits"),
+                stat_pitch_runs=F("pitch_runs"),
+                stat_pitch_er=F("pitch_er"),
+                stat_pitch_hr=F("pitch_hr"),
+                stat_pitch_walks=F("pitch_walks"),
+                stat_pitch_strikeouts=F("pitch_strikeouts"),
+            )
+            .values(
+                "playerid__lastname",
+                "playerid__firstname",
+                "season",
+                "teamid__city",
+                "stat_pitch_gp",
+                "stat_pitch_gs",
+                "stat_pitch_cg",
+                "stat_pitch_sho",
+                "stat_pitch_wins",
+                "stat_pitch_loss",
+                "stat_pitch_save",
+                "stat_pitch_ipfull",
+                "stat_pitch_ipfract",
+                "stat_pitch_hits",
+                "stat_pitch_runs",
+                "stat_pitch_er",
+                "stat_pitch_hr",
+                "stat_pitch_walks",
+                "stat_pitch_strikeouts",
+            )
+        )
+
+        return self.process_pitching_statsrecords(stat_records)
+
+    def dictfetchall(self, cursor):
+        """
+        Return all rows from a cursor as a dict.
+        Assume the column names are unique.
+        """
+        columns = [col[0] for col in cursor.description]
+        return [dict(zip(columns, row)) for row in cursor.fetchall()]
+
+    def get_all_pitching_careers(self, max_season=9999):
+        with connection.cursor() as cursor:
+            cursor.execute(
+                """
+                SELECT
+                    players.lastname as playerid__lastname,
+                    players.firstname as playerid__firstname,
+                    statrecords.stat_pitch_gp,
+                    statrecords.stat_pitch_gs,
+                    statrecords.stat_pitch_cg,
+                    statrecords.stat_pitch_sho,
+                    statrecords.stat_pitch_wins,
+                    statrecords.stat_pitch_loss,
+                    statrecords.stat_pitch_save,
+                    statrecords.stat_pitch_ipfull,
+                    statrecords.stat_pitch_ipfract,
+                    statrecords.stat_pitch_hits,
+                    statrecords.stat_pitch_runs,
+                    statrecords.stat_pitch_er,
+                    statrecords.stat_pitch_hr,
+                    statrecords.stat_pitch_walks,
+                    statrecords.stat_pitch_strikeouts
+                FROM players
+                INNER JOIN (
+                    SELECT
+                        playerid,
+                        SUM(pitch_gp) AS stat_pitch_gp,
+                        SUM(pitch_gs) AS stat_pitch_gs,
+                        SUM(pitch_cg) AS stat_pitch_cg,
+                        SUM(pitch_sho) AS stat_pitch_sho,
+                        SUM(pitch_wins) AS stat_pitch_wins,
+                        SUM(pitch_loss) AS stat_pitch_loss,
+                        SUM(pitch_save) AS stat_pitch_save,
+                        SUM(pitch_ipfull) AS stat_pitch_ipfull,
+                        SUM(pitch_ipfract) AS stat_pitch_ipfract,
+                        SUM(pitch_hits) AS stat_pitch_hits,
+                        SUM(pitch_runs) AS stat_pitch_runs,
+                        SUM(pitch_er) AS stat_pitch_er,
+                        SUM(pitch_hr) AS stat_pitch_hr,
+                        SUM(pitch_walks) AS stat_pitch_walks,
+                        SUM(pitch_strikeouts) AS stat_pitch_strikeouts
+                    FROM
+                        statrecords
+                    WHERE
+                        pitch_gp > 0 AND season <= %s
+                    GROUP BY
+                        statrecords.playerid) statrecords
+                ON statrecords.playerid = players.id
+                ORDER BY
+                    players.lastname, players.firstname
+                """,
+                [max_season],
             )
 
-        return player_data
+            stat_records = self.dictfetchall(cursor)
+
+        return self.process_pitching_statsrecords(stat_records)

@@ -24,7 +24,7 @@ players = Players.objects.filter(displayname="Lourdes Gurriel Jr.")
 
 
 for player in players:
-    # print (f'Looking player {player.firstname} {player.lastname}...')
+    # pprint (f'Looking player {player.firstname} {player.lastname}...')
     # player_info = manager.get_player_info(player.firstname, player.lastname)
 
     player_data = manager.check_for_player_sync(player, player.lastname)
