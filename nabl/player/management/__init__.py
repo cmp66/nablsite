@@ -20,11 +20,15 @@ player_shorthands = ["jr.", "sr.", "ii", "iii", "iv", "Jr.", "Sr.", "II", "III",
 
 class PlayerManager:
     def __init__(self, load_lahman=False):
-        # self.lahman_data = lahman.download_lahman() if load_lahman else None
-        # people = lahman.people()
-        # people.to_csv('people.csv')
-        self.fielding = lahman.fielding()
-        # fielding.to_csv('fielding.csv')
+        self.lahman_data = lahman.download_lahman() if load_lahman else None
+        self.people = lahman.people() if load_lahman else None
+        self.batting = lahman.batting() if load_lahman else None
+        self.fielding = lahman.fielding() if load_lahman else None
+
+        if load_lahman:
+            self.batting.to_csv("temp/batting.csv")
+            # people.to_csv('temp/people.csv')
+            # fielding.to_csv('temp/fielding.csv')
 
     def get_player_info(self, lastname, firstname=None, target_year=None):
         """Get the player ID from the name."""
@@ -82,6 +86,15 @@ class PlayerManager:
             return None
 
         return player["POS"].iloc[0]
+
+    def get_player_batting(self, lahman_id):
+        if self.lahman_data is None:
+            return None
+        player = self.batting.query(f'playerID == "{lahman_id}"')
+        if player.empty:
+            return None
+
+        return player
 
     def get_modified_lastname(self, name):
         """Get the player's last name."""

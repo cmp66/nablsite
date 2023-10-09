@@ -19,8 +19,8 @@ def update_player(player, player_data):
 
 manager = PlayerManager(load_lahman=True)
 
-players = Players.objects.filter(displayname="Lourdes Gurriel Jr.")
-# players = Players.objects.all()
+# players = Players.objects.filter(displayname="Lourdes Gurriel Jr.")
+players = Players.objects.all()
 
 
 for player in players:

@@ -1,6 +1,12 @@
 import xlrd
 import logging
 import argparse
+import os
+import django
+
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "nabl.settings")
+django.setup()
+
 from league.models import Teams
 from player.models import Players
 from player.models import Rosterassign
