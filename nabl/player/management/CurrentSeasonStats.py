@@ -4,18 +4,18 @@ import csv
 
 manager = PlayerManager(load_lahman=False)
 
-assigned_players = Rosterassign.objects.all().filter(year=2023)
-carded_players = CardedPlayers.objects.all().filter(season=2022)
+assigned_players = Rosterassign.objects.all().filter(year=2024)
+carded_players = CardedPlayers.objects.all().filter(season=2023)
 unassigned_players = (
     Players.objects.all()
     .filter(
         id__in=CardedPlayers.objects.all()
-        .filter(season=2022)
+        .filter(season=2023)
         .values_list("playerid", flat=True)
     )
     .exclude(
         id__in=Rosterassign.objects.all()
-        .filter(year=2023)
+        .filter(year=2024)
         .values_list("playerid", flat=True)
     )
 )
@@ -24,13 +24,13 @@ batting_data = {}
 pitching_data = {}
 filtered_batting_data = {}
 filtered_pitching_data = {}
-with open("files/stats/batting_2022.csv", encoding="utf-8-sig") as csvfile:
+with open("../files/stats/batting_2024.csv", encoding="utf-8-sig") as csvfile:
     csvReader = csv.DictReader(csvfile)
     for rows in csvReader:
         key = rows["Name"]
         batting_data[key] = rows
 
-with open("files/stats/pitching_2022.csv", encoding="utf-8-sig") as csvfile:
+with open("../files/stats/pitching_2024.csv", encoding="utf-8-sig") as csvfile:
     csvReader = csv.DictReader(csvfile)
     for rows in csvReader:
         key = rows["Name"]
@@ -43,17 +43,16 @@ for player in unassigned_players:
         filtered_batting_data[f"{player.firstname} {player.lastname}"] = batting_data[
             f"{player.firstname} {player.lastname}"
         ]
-
-    if player.displayname in pitching_data:
+    elif player.displayname in pitching_data:
         filtered_pitching_data[player.displayname] = pitching_data[player.displayname]
     elif f"{player.firstname} {player.lastname}" in pitching_data:
         filtered_pitching_data[f"{player.firstname} {player.lastname}"] = pitching_data[
             f"{player.firstname} {player.lastname}"
         ]
+    else:
+        print(f"Player not found: {player.displayname}")
 
-with open(
-    "files/stats/filtered_batting_2022.csv", "w", encoding="utf-8-sig"
-) as csvfile:
+with open("../files/stats/filtered_batting.csv", "w", encoding="utf-8-sig") as csvfile:
     csvWriter = csv.DictWriter(
         csvfile, fieldnames=list(batting_data.values())[0].keys()
     )
@@ -62,9 +61,7 @@ with open(
     for player in filtered_batting_data:
         csvWriter.writerow(filtered_batting_data[player])
 
-with open(
-    "files/stats/filtered_pitching_2022.csv", "w", encoding="utf-8-sig"
-) as csvfile:
+with open("../files/stats/filtered_pitching.csv", "w", encoding="utf-8-sig") as csvfile:
     csvWriter = csv.DictWriter(
         csvfile, fieldnames=list(pitching_data.values())[0].keys()
     )

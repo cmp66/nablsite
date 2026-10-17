@@ -2,10 +2,11 @@ import argparse
 import csv
 import logging
 from tabulate import tabulate
+from unidecode import unidecode
 from player.management import PlayerManager
 from player.models import Players, CardedPlayers
 
-manager = PlayerManager(load_lahman=True)
+manager = PlayerManager()
 action = "plan"
 
 
@@ -32,7 +33,7 @@ def check_if_exists(plan):
 
 def process_row(team, display_name, carded_season, create_carded_player=False):
     player = (
-        Players.objects.filter(displayname=display_name)
+        Players.objects.filter(displayname=unidecode(display_name))
         .filter(startyear__lte=carded_season)
         .filter(endyear__gte=carded_season)
     )
@@ -83,7 +84,7 @@ def main():
         "--action",
         "-a",
         default="plan",
-        choices=["plan", "create-new", "import", "validate"],
+        choices=["plan", "create-new", "import", "fix", "validate"],
         help="Action to take (plan, update, etc.",
     )
 
@@ -108,9 +109,9 @@ def main():
 
         for row in reader:
             if action == "validate":
-                carded_player = CardedPlayers.objects.filter(playername=row[1]).filter(
-                    season=carded_season
-                )
+                carded_player = CardedPlayers.objects.filter(
+                    playername=unidecode(row[1])
+                ).filter(season=carded_season)
                 if not carded_player:
                     logging.error(f"No carded player found for {row[1]}")
             else:
@@ -131,7 +132,14 @@ def main():
                             manager.create_player_from_info(plan, args.season)
                         else:
                             logging.error(
-                                f'Player {plan["displayname"]} already exists'
+                                f'Player {plan["name_first"]} {plan["name_last"] } already exists'
+                            )
+                    elif action == "fix":
+                        if check_if_exists(plan):
+                            manager.update_player_from_info(plan)
+                        else:
+                            logging.error(
+                                f'Player {plan["name_first"]} {plan["name_last"] } does not exist to update'
                             )
 
     print(tabulate(plans, headers="keys", tablefmt="psql"))
