@@ -1,7 +1,8 @@
 from math import floor, isnan
+from os import path
 from unidecode import unidecode
-from pybaseball import playerid_lookup
-from pybaseball import lahman
+from pybaseball import playerid_lookup, playerid_reverse_lookup
+import pandas as pd
 import logging
 import os
 import string
@@ -19,21 +20,55 @@ player_shorthands = ["jr.", "sr.", "ii", "iii", "iv", "Jr.", "Sr.", "II", "III",
 
 
 class PlayerManager:
-    def __init__(self, load_lahman=False):
+    def __init__(self):
         # self.lahman_data = lahman.download_lahman() if load_lahman else None
-        # people = lahman.people()
-        # people.to_csv('people.csv')
-        self.fielding = lahman.fielding()
-        # fielding.to_csv('fielding.csv')
+        self.people = (
+            pd.read_csv("../files/lahman/People.csv")
+            if path.exists("../files/lahman/People.csv")
+            else None
+        )
+        self.batting = (
+            pd.read_csv("../files/lahman/Batting.csv")
+            if path.exists("../files/lahman/Batting.csv")
+            else None
+        )
+        self.fielding = (
+            pd.read_csv("../files/lahman/Fielding.csv")
+            if path.exists("../files/lahman/Fielding.csv")
+            else None
+        )
 
-    def get_player_info(self, lastname, firstname=None, target_year=None):
+        # if load_lahman:
+        #    self.lahman_data.to_csv("temp/batting.csv")
+        # people.to_csv('temp/people.csv')
+        # self.fielding.to_csv("temp/fielding.csv")
+
+    def getPlayerByBBRefId(self, bbrefid):
+        """
+        Returns a result set of players with a given display name
+        """
+        players = Players.objects.filter(bbrefid__exact=bbrefid)
+        if players.count() == 0 or players.count() > 1:
+            return None
+        return players[0]
+
+    def get_player_info(self, lastname, firstname=None, target_year=None, bbrefid=None):
         """Get the player ID from the name."""
 
+        # print(f"Looking up {firstname} {lastname}  {bbrefid}...")
+
         player_ids = (
-            playerid_lookup(lastname)
-            if firstname is None
-            else playerid_lookup(lastname, firstname)
+            playerid_reverse_lookup([bbrefid], key_type="bbref")
+            if bbrefid is not None
+            else None
         )
+
+        if player_ids is None or player_ids.empty:
+            player_ids = (
+                playerid_lookup(lastname)
+                if firstname is None
+                else playerid_lookup(lastname, firstname)
+            )
         if player_ids.empty:
             player_ids = (
                 playerid_lookup(self.get_modified_lastname(lastname))
@@ -83,6 +118,15 @@ class PlayerManager:
 
         return player["POS"].iloc[0]
 
+    def get_player_batting(self, lahman_id):
+        if self.lahman_data is None:
+            return None
+        player = self.batting.query(f'playerID == "{lahman_id}"')
+        if player.empty:
+            return None
+
+        return player
+
     def get_modified_lastname(self, name):
         """Get the player's last name."""
         name = name.lower()
@@ -110,13 +154,36 @@ class PlayerManager:
         player.fangraphsid = player_info["key_fangraphs"]
         player.position = player_info["position"]
 
+        print(f"Creating player {player.displayname} ({player.bbrefid})")
+
         player.save()
 
         logging.info(f"Created player {player.displayname} ({player.bbrefid})")
         return player
 
-    def check_for_player_sync(self, player, target_name):
-        player_info = self.get_player_info(target_name)
+    def update_player_from_info(self, player_info):
+        player = self.getPlayerByBBRefId(player_info["key_bbref"])
+        if not player:
+            logging.error(
+                f"Player with bbrefid {player_info['key_bbref']} not found for update"
+            )
+            return None
+        player.firstname = string.capwords(player_info["name_first"])
+        player.lastname = string.capwords(player_info["name_last"])
+        player.displayname = (
+            f"{unidecode(player.firstname)} {unidecode(player.lastname)}"
+        )
+        player.startyear = player_info["mlb_played_first"]
+        player.endyear = player_info["mlb_played_last"]
+        player.position = player_info["position"]
+
+        player.save()
+
+        logging.info(f"Updatedplayer {player.displayname} ({player.bbrefid})")
+        return player
+
+    def check_for_player_sync(self, player, target_name, bbrefid):
+        player_info = self.get_player_info(target_name, bbrefid=bbrefid)
         result = None
         if player_info:
             for possible_player in player_info:

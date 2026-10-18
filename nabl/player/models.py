@@ -115,8 +115,8 @@ class CardedPlayers(models.Model):
         verbose_name = "Carded Player"
         verbose_name_plural = "Carded Players"
 
-        def __str__(self):
-            return f"{self.playername}"
+    def __str__(self):
+        return f"{self.playername}"
 
 
 class CardedPlayersAdmin(admin.ModelAdmin):

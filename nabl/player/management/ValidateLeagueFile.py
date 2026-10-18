@@ -1,6 +1,12 @@
 import xlrd
 import logging
 import argparse
+import os
+import django
+
+os.environ.setdefault("DJANGO_SETTINGS_MODULE", "nabl.settings")
+django.setup()
+
 from league.models import Teams
 from player.models import Players
 from player.models import Rosterassign
@@ -36,7 +42,7 @@ def loadMasterFile(filename):
 
 
 def getTeamList(xl_file):
-    sh = xl_file.sheet_by_name("Rosters and available players")
+    sh = xl_file.sheet_by_name("Rosters & Avail. Players")
     teams = {}
 
     for rownum in range(3, sh.nrows):
@@ -61,11 +67,13 @@ def getTeamList(xl_file):
 def getPlayer(firstname, lastname, minYear):
     player = None
     try:
-        player = getPlayerByDisplayName(firstname + " " + lastname, minYear)
+        player = getPlayerByDisplayName(
+            firstname.strip() + " " + lastname.strip(), minYear
+        )
         return player
     except (ObjectDoesNotExist, MultipleObjectsReturned):
         try:
-            player = getPlayerByFullName(firstname, lastname, minYear)
+            player = getPlayerByFullName(firstname.strip(), lastname.strip(), minYear)
             return player
         except ObjectDoesNotExist:
             return None
@@ -75,7 +83,7 @@ def getPlayer(firstname, lastname, minYear):
 
 def validatePlayersInFile(xl_file, rosterYear, cardedYear, minYear):
     count = 0
-    sh = xl_file.sheet_by_name("Rosters and available players")
+    sh = xl_file.sheet_by_name("Rosters & Avail. Players")
     teams = getTeamList(xl_file)
 
     for rownum in range(3, 1001):
